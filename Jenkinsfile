@@ -150,7 +150,7 @@ node('kiali-build && fedora') {
             echo "Creating GitHub release entry for ${containerTag}"
             // TODO: ECHO -> SH
             echo """
-              curl -H "Authorization: token $GH_TOKEN" \
+              curl -H "Authorization: token \$GH_TOKEN" \
                 -H "Content-Type: application/json" \
                 -d '{"name": "Kiali Operator ${releasingVersion}", "tag_name": "${containerTag}", "prerelease": ${prerelease}}' \
                 -X POST ${operatorReleaseUri}
@@ -175,7 +175,7 @@ node('kiali-build && fedora') {
 	      git push --dry-run ${forkGitUri} \$(git rev-parse HEAD):refs/heads/${BUILD_TAG}-main
 	      curl -H "Authorization: token $GH_TOKEN" \
 	        -H "Content-Type: application/json" \
-	        -d '{"title": "Prepare for next version", "body": "Please, merge to update version numbers and prepare for release ${nextRelease}.", "head": "${kialiBotUser}:${BUILD_TAG}-main", "base": "${mainBranch}"}' \
+	        -d '{"title": "Prepare for next version", "body": "Please, merge to update version numbers and prepare for release ${nextVersion}.", "head": "${kialiBotUser}:${BUILD_TAG}-main", "base": "${mainBranch}"}' \
 	        -X POST ${operatorPullUri}
             """
           }
