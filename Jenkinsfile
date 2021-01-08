@@ -135,10 +135,11 @@ node('kiali-build && fedora') {
           // Create git tags for the released version
           if (params.RELEASE_TYPE != 'edge') {
             echo "Creating git tag ${containerTag}"
+            // TODO: Remove dry-run
             sh """
               git add Makefile
               git commit -m "Release ${releasingVersion}"
-              git push origin \$(git rev-parse HEAD):refs/tags/${containerTag}
+              git push --dry-run origin \$(git rev-parse HEAD):refs/tags/${containerTag}
             """
 
             def prerelease = 'false'
@@ -147,7 +148,8 @@ node('kiali-build && fedora') {
             }
 
             echo "Creating GitHub release entry for ${containerTag}"
-            sh """
+            // TODO: ECHO -> SH
+            echo """
               curl -H "Authorization: token $GH_TOKEN" \
                 -H "Content-Type: application/json" \
                 -d '{"name": "Kiali Operator ${releasingVersion}", "tag_name": "${containerTag}", "prerelease": ${prerelease}}' \
@@ -159,17 +161,18 @@ node('kiali-build && fedora') {
 
           // Create/update a branch that we can use for a patch release, in case it's needed
           if (params.RELEASE_TYPE != 'edge' && !params.RELEASE_TYPE.contains('snapshot')) {
-	    sh "git push origin \$(git rev-parse HEAD):refs/heads/${versionBranch}"
+	    sh "git push --dry-run origin \$(git rev-parse HEAD):refs/heads/${versionBranch}"
           }
 
           // Create PR to prepare master branch for next version (required only in minor versions)
           if (params.RELEASE_TYPE == "minor") {
             echo "Creating PR to prepare for version ${nextVersion}"
+            // TODO: Remove dry-run
             sh """
               sed -i -r "s/^VERSION \\?= (.*)/VERSION \\?= v${nextVersion}-SNAPSHOT/" Makefile
               git add Makefile
               git commit -m "Prepare for next version"
-	      git push ${forkGitUri} \$(git rev-parse HEAD):refs/heads/${BUILD_TAG}-main
+	      git push --dry-run ${forkGitUri} \$(git rev-parse HEAD):refs/heads/${BUILD_TAG}-main
 	      curl -H "Authorization: token $GH_TOKEN" \
 	        -H "Content-Type: application/json" \
 	        -d '{"title": "Prepare for next version", "body": "Please, merge to update version numbers and prepare for release ${nextRelease}.", "head": "${kialiBotUser}:${BUILD_TAG}-main", "base": "${mainBranch}"}' \
